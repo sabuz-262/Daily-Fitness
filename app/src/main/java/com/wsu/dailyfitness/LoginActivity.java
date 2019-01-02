@@ -18,12 +18,19 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.content.Intent;
+import java.util.ArrayList;
 
 
 public class LoginActivity extends AppCompatActivity {
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
+
+    public static String mUsername = "sabuz";
+
     private UserLoginTask mAuthTask = null;
 
     // UI references.
@@ -31,6 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private DatabaseHelper database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,9 +61,12 @@ public class LoginActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Intent intent = new Intent(getApplicationContext(),RegisterActivity.class);
+                startActivity(intent);
             }
         });
+
+        database = new DatabaseHelper(this);
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
@@ -140,7 +151,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     /**
-     * Represents an asynchronous login/registration task used to authenticate
+     * Represents an asynchronous login task used to authenticate
      * the user.
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
@@ -158,13 +169,18 @@ public class LoginActivity extends AppCompatActivity {
             // TODO: attempt authentication against a network service.
 
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
+
+                ArrayList<User> arrayList = database.getAlluser();
+
+                for(int i = 0; i<arrayList.size(); i++){
+                    if(arrayList.get(i).getUserName().equals(mUsername) && arrayList.get(i).getPassword().equals(mPassword)){
+                        return true;
+                    }
+                }
+                return false;
+            } catch (Exception e) {
                 return false;
             }
-
-            return true;
         }
 
         @Override
@@ -173,7 +189,9 @@ public class LoginActivity extends AppCompatActivity {
             showProgress(false);
 
             if (success) {
-                finish();
+                LoginActivity.mUsername = this.mUsername;
+                Intent intent = new Intent(getApplicationContext(),FragmentListActivity.class);
+                startActivity(intent);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();

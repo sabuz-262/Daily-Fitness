@@ -3,6 +3,7 @@ package com.wsu.dailyfitness;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.AsyncTask;
@@ -17,7 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 /**
- * A login screen that offers login via email/password.
+ * A register screen that offers register via username and password.
  */
 public class RegisterActivity extends AppCompatActivity  {
 
@@ -26,18 +27,22 @@ public class RegisterActivity extends AppCompatActivity  {
     private UserRegisterTask mAuthTask = null;
 
     // UI references.
+    private AutoCompleteTextView mFullNameView;
     private AutoCompleteTextView mUsernameView;
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mRegisterFormView;
 
+    private DatabaseHelper database ;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        // Set up the login form.
+        // Set up the register form.
 
+        mFullNameView = (AutoCompleteTextView)findViewById(R.id.name);
         mUsernameView = (AutoCompleteTextView)findViewById(R.id.username);
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -53,23 +58,23 @@ public class RegisterActivity extends AppCompatActivity  {
 
         mRegisterFormView = findViewById(R.id.register_form);
         mProgressView = findViewById(R.id.register_progress);
+        database = new DatabaseHelper(this);
     }
 
 
 
     /**
-     * Attempts to sign in or register the account specified by the login form.
+     * Attempts to register the account specified by the register form.
      * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
+     * errors are presented and no actual register attempt is made.
      */
     private void attemptoRegister() {
         if (mAuthTask != null) {
             return;
         }
 
-
-
-        // Store values at the time of the login attempt.
+        // Store values at the time of the register attempt.
+        String fullnname = mFullNameView.getText().toString();
         String username = mUsernameView.getText().toString();
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
@@ -77,14 +82,19 @@ public class RegisterActivity extends AppCompatActivity  {
         boolean cancel = false;
         View focusView = null;
 
-        if (TextUtils.isEmpty(username)) {
+        if (TextUtils.isEmpty(fullnname)) {
+            mFullNameView.setError(getString(R.string.error_field_required));
+            focusView = mFullNameView;
+            cancel = true;
+        }
+        else if (TextUtils.isEmpty(username)) {
             mUsernameView.setError(getString(R.string.error_field_required));
             focusView = mUsernameView;
             cancel = true;
         }
 
         // Check for a valid email address.
-         else if (TextUtils.isEmpty(email)) {
+        else if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
             cancel = true;
@@ -105,14 +115,14 @@ public class RegisterActivity extends AppCompatActivity  {
 
 
         if (cancel) {
-            // There was an error; don't attempt login and focus the first
+            // There was an error; don't attempt register and focus the first
             // form field with an error.
             focusView.requestFocus();
         } else {
             // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
+            // perform the user register attempt.
             showProgress(true);
-            mAuthTask = new UserRegisterTask(username, email, password);
+            mAuthTask = new UserRegisterTask(new User(fullnname, username, email, password));
             mAuthTask.execute((Void) null);
         }
     }
@@ -128,7 +138,7 @@ public class RegisterActivity extends AppCompatActivity  {
     }
 
     /**
-     * Shows the progress UI and hides the login form.
+     * Shows the progress UI and hides the register form.
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
@@ -164,33 +174,31 @@ public class RegisterActivity extends AppCompatActivity  {
     }
 
     /**
-     * Represents an asynchronous login/registration task used to authenticate
+     * Represents an asynchronous registration task used to authenticate
      * the user.
      */
     public class UserRegisterTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mUsername;
-        private final String mEmail;
-        private final String mPassword;
+        private final User mUser;
 
-        UserRegisterTask(String username, String email, String password) {
-            mUsername = username;
-            mEmail = email;
-            mPassword = password;
+
+        UserRegisterTask(User user) {
+
+            mUser = user;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
 
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
+
+                boolean isInserted = database.insertUser(mUser);
+                return isInserted;
+
+            }catch (Exception e){
                 return false;
             }
 
-            return true;
         }
 
         @Override
@@ -199,7 +207,8 @@ public class RegisterActivity extends AppCompatActivity  {
             showProgress(false);
 
             if (success) {
-                finish();
+                Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
+                startActivity(intent);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
