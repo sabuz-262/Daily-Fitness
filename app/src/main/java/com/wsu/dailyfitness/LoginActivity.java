@@ -4,23 +4,17 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.support.v7.app.AppCompatActivity;
-
 import android.os.AsyncTask;
-
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
 import android.content.Intent;
-import java.util.ArrayList;
+
 
 
 public class LoginActivity extends AppCompatActivity {
@@ -29,7 +23,7 @@ public class LoginActivity extends AppCompatActivity {
      * Keep track of the login task to ensure we can cancel it if requested.
      */
 
-    public static String mUsername = "sabuz";
+    public static String mUsername = "";
 
     private UserLoginTask mAuthTask = null;
 
@@ -67,7 +61,6 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         database = new DatabaseHelper(this);
-
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
     }
@@ -78,7 +71,6 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-
         // Store values at the time of the login attempt.
         String username = mUsernameView.getText().toString();
         String password = mPasswordView.getText().toString();
@@ -86,22 +78,18 @@ public class LoginActivity extends AppCompatActivity {
         boolean cancel = false;
         View focusView = null;
 
-
         // Check for a valid username address.
         if (TextUtils.isEmpty(username)) {
             mUsernameView.setError(getString(R.string.error_field_required));
             focusView = mUsernameView;
             cancel = true;
         }
-
         // Check for a valid password, if the user entered one.
         else if (TextUtils.isEmpty(password)) {
             mPasswordView.setError(getString(R.string.error_field_required));
             focusView = mPasswordView;
             cancel = true;
         }
-
-
 
         if (cancel) {
             // There was an error; don't attempt login and focus the first
@@ -115,7 +103,6 @@ public class LoginActivity extends AppCompatActivity {
             mAuthTask.execute((Void) null);
         }
     }
-
     /**
      * Shows the progress UI and hides the login form.
      */
@@ -149,7 +136,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-
     /**
      * Represents an asynchronous login task used to authenticate
      * the user.
@@ -166,18 +152,11 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
             try {
 
-                ArrayList<User> arrayList = database.getAlluser();
+                boolean res = database.isuserFound(mUsername, mPassword);
+                return res;
 
-                for(int i = 0; i<arrayList.size(); i++){
-                    if(arrayList.get(i).getUserName().equals(mUsername) && arrayList.get(i).getPassword().equals(mPassword)){
-                        return true;
-                    }
-                }
-                return false;
             } catch (Exception e) {
                 return false;
             }
@@ -205,4 +184,3 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 }
-

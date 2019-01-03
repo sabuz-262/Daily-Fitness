@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="MediumBlue">#0000FF</color>
+    <color name="RED">#FF0000</color>
+    <color name="WHITE">#FFFFFF</color>
+    <color name="BLACK">#000000</color>
+    <color name="IVORY">#cdcdc1</color>
+    <color name="Honeydew2">#e0eee0</color>
+    <color name="Seashell2">#eee5de</color>
+    <color name="Snow">#8b8989</color>
+    <color name="Floral_White">#fffaf0</color>
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+
 </resources>

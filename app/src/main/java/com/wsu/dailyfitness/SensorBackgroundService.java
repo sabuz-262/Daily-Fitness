@@ -1,6 +1,9 @@
 package com.wsu.dailyfitness;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -10,34 +13,38 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
-
+import android.app.AlertDialog;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import android.content.DialogInterface;
+import android.app.Activity;
+import android.support.v4.content.LocalBroadcastManager;
 
 /**
  * a background service.
  */
 public class SensorBackgroundService extends Service implements SensorEventListener {
 
-    /**
-     * a tag for logging
-     */
-    private static final String TAG = SensorBackgroundService.class.getSimpleName();
+    public static final String ACTION = "com.wsu.dailyfitness";
 
     /**
      *  we need the sensor manager and sensor reference
      */
     private SensorManager mSensorManager = null;
-
-
     /**
      * keep track of the previous value
      */
     public static int previousValue = 0;
+    private int totalStep = 0;
+    private float mAcheive = 1000;
     private  updateStatsTask mstatsTask = null;
     private DatabaseHelper database;
+    private String mToday = "";
+    private AlarmManager alarmMgr;
+    private PendingIntent alarmIntent;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -51,10 +58,11 @@ public class SensorBackgroundService extends Service implements SensorEventListe
 
         // we need the step counter sensor
         Sensor sensor = mSensorManager.getDefaultSensor(sensorType);
-
         mSensorManager.registerListener(this, sensor,
                 SensorManager.SENSOR_DELAY_UI);
 
+        //set alarm at 9AM and then repeat alarm every 1 hour
+        setAlarm();
         return START_STICKY;
     }
 
@@ -63,7 +71,6 @@ public class SensorBackgroundService extends Service implements SensorEventListe
         // do nothing
         return null;
     }
-
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -77,13 +84,53 @@ public class SensorBackgroundService extends Service implements SensorEventListe
             return;
         }
 
+        // previousValue = sensors previos data, before the application starts for first time
+        // current = todays' data
         int current = (int)event.values[0] - previousValue;
-        Log.d(TAG, "received sensor valures are: " + String.valueOf(event.values[0]));
+        totalStep = totalStep + current;
+
+        //Feedback on achieving milestones (multiples of 1000 feet)
+        if(totalStep*Constants.step_length == mAcheive){
+
+            //next achievement
+            mAcheive = mAcheive + Constants.multiples_acheive;
+            Intent intent = new Intent(ACTION);
+            // Put extras into the intent as usual
+            intent.putExtra("resultCode", Activity.RESULT_OK);
+            intent.putExtra("resultValue", " Congrates for achieving  " + totalStep + " distance.");
+            // Fire the broadcast with intent packaged
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        }
+
+        if(mToday.isEmpty()){
+            mToday = getDateTime();
+        }else if(!mToday.equals(getDateTime())){
+            // new day start, aggerate with the previos data
+            previousValue = previousValue + current;
+            mToday = getDateTime();
+            return;
+        }
 
         mstatsTask = new updateStatsTask(LoginActivity.mUsername,getDateTime(),  current);
         mstatsTask.execute((Void) null);
 
+    }
 
+    private void setAlarm(){
+
+        alarmMgr = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(getApplicationContext(), ReminderBroadcastReceiver.class);
+        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, 0);
+
+        // Set the alarm to start at 9.00 a.m.
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, 9);
+        calendar.set(Calendar.MINUTE, 00);
+
+        //repeat the alarm after evry 1 hour
+        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                1000 * 60 * 60, alarmIntent);
     }
 
     private String getDateTime() {
@@ -108,7 +155,6 @@ public class SensorBackgroundService extends Service implements SensorEventListe
         @Override
         protected Boolean doInBackground(Void... params) {
             // insert  steps
-
             try {
                 return  database.insertDailyStats(mUsername, mDate, msteps);
 
@@ -120,17 +166,15 @@ public class SensorBackgroundService extends Service implements SensorEventListe
         @Override
         protected void onPostExecute(final Boolean success) {
             mstatsTask = null;
+            /*
             if(success)
                 Toast.makeText(getApplicationContext(), "Updated" + " " + msteps + "", Toast.LENGTH_SHORT).show();
             else
-                Toast.makeText(getApplicationContext(), "Faileld", Toast.LENGTH_SHORT).show();
-
+                Toast.makeText(getApplicationContext(), "Faileld", Toast.LENGTH_SHORT).show();*/
         }
 
         @Override
         protected void onCancelled() {
         }
     }
-
-
 }

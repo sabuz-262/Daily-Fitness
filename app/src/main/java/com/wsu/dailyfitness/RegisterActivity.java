@@ -5,9 +5,9 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
-
 import android.os.AsyncTask;
-
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -22,10 +22,7 @@ import android.widget.EditText;
  */
 public class RegisterActivity extends AppCompatActivity  {
 
-
-
     private UserRegisterTask mAuthTask = null;
-
     // UI references.
     private AutoCompleteTextView mFullNameView;
     private AutoCompleteTextView mUsernameView;
@@ -33,21 +30,18 @@ public class RegisterActivity extends AppCompatActivity  {
     private EditText mPasswordView;
     private View mProgressView;
     private View mRegisterFormView;
-
     private DatabaseHelper database ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        // Set up the register form.
 
+        // Set up the register form.
         mFullNameView = (AutoCompleteTextView)findViewById(R.id.name);
         mUsernameView = (AutoCompleteTextView)findViewById(R.id.username);
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         mPasswordView = (EditText) findViewById(R.id.password);
-
-
         Button mRegisterButton = (Button) findViewById(R.id.register_button);
         mRegisterButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -55,13 +49,10 @@ public class RegisterActivity extends AppCompatActivity  {
                 attemptoRegister();
             }
         });
-
         mRegisterFormView = findViewById(R.id.register_form);
         mProgressView = findViewById(R.id.register_progress);
         database = new DatabaseHelper(this);
     }
-
-
 
     /**
      * Attempts to register the account specified by the register form.
@@ -92,7 +83,6 @@ public class RegisterActivity extends AppCompatActivity  {
             focusView = mUsernameView;
             cancel = true;
         }
-
         // Check for a valid email address.
         else if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
@@ -104,15 +94,12 @@ public class RegisterActivity extends AppCompatActivity  {
             focusView = mEmailView;
             cancel = true;
         }
-
         // Check for a valid password, if the user entered one.
-        else if (TextUtils.isEmpty(password)) {
+        else if (TextUtils.isEmpty(password) && !isStrongPassword(password)) {
             mPasswordView.setError(getString(R.string.error_field_required));
             focusView = mPasswordView;
             cancel = true;
         }
-
-
 
         if (cancel) {
             // There was an error; don't attempt register and focus the first
@@ -128,13 +115,25 @@ public class RegisterActivity extends AppCompatActivity  {
     }
 
     private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
+        String regex = "^(.+)@(.+)$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
     }
 
-    private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
-        return password.length() > 4;
+    public boolean isStrongPassword(String sPassword)
+    {
+        if(sPassword.length() < 4)
+            return false;
+        if(isSpaceContains(sPassword))
+            return false;
+
+
+        return true;
+    }
+    private boolean isSpaceContains(String password)
+    {
+        return password.matches(".*\\s.*");
     }
 
     /**
@@ -181,7 +180,6 @@ public class RegisterActivity extends AppCompatActivity  {
 
         private final User mUser;
 
-
         UserRegisterTask(User user) {
 
             mUser = user;
@@ -191,14 +189,12 @@ public class RegisterActivity extends AppCompatActivity  {
         protected Boolean doInBackground(Void... params) {
 
             try {
-
                 boolean isInserted = database.insertUser(mUser);
                 return isInserted;
 
             }catch (Exception e){
                 return false;
             }
-
         }
 
         @Override

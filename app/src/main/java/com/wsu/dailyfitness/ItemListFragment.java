@@ -9,7 +9,7 @@ import android.widget.ListView;
 
 public class ItemListFragment extends ListFragment {
 
-    static final String[] items = new String[] { "Today's Walk","Statistics","Logout",};
+    static final String[] items = new String[] { "Statistics","Logout",};
 
     private static final String STATE_ACTIVATED_POSITION = "activated_position";
 
@@ -34,7 +34,6 @@ public class ItemListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setListAdapter(new MainMenuAdapter(getActivity().getBaseContext(), items));;
-
     }
 
     @Override

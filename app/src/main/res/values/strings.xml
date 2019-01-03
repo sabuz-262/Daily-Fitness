@@ -17,4 +17,7 @@
         completions."
     </string>
     <string name="title_activity_register">Register</string>
+    <string name="notificationtitle">Notification</string>
+    <string name="title">"Title : "</string>
+    <string name="text">"Text : "</string>
 </resources>

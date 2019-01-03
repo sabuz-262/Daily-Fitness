@@ -1,8 +1,7 @@
 package com.wsu.dailyfitness;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
+import java.util.Vector;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -44,10 +43,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + USER_USERNAME + " VARCHAR, "//
                 + DAILY_DATE + " VARCHAR, "//
                 + DAILY_STEPS + " INTEGER) ");
-
-
-
-
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -56,15 +51,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean insertDailyStats(String username, String date, int steps ) {
 
         int id = isTodayFound(username, date);
-
         if(id == -1){
             SQLiteDatabase db = this.getWritableDatabase();
             ContentValues cv = new ContentValues();
             cv.put(USER_USERNAME, username);
             cv.put(DAILY_DATE, date);
             cv.put(DAILY_STEPS, steps);
-
-
             long row_id = db.insert(DAILY_STATS_TABLE_NAME, null, cv);
             db.close();
 
@@ -73,7 +65,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             return updateSteps(id, steps);
         }
-
     }
 
     private int isTodayFound(String username, String date){
@@ -101,8 +92,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-
-
     public boolean insertUser(User user) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -117,10 +106,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return (row_id != -1);
     }
 
-    public ArrayList<User> getAlluser() {
-        ArrayList<User> array_list = new ArrayList<User>();
+    public boolean isuserFound(String username, String password){
 
-        //hp = new HashMap();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor res =  db.rawQuery( "select * from users where username = '" + username + "' AND password = '" + password + "'", null );
+        res.moveToFirst();
+
+        while(res.isAfterLast() == false){
+            return true;
+        }
+         return false;
+    }
+
+    public ArrayList<User> getAlluser() {
+        ArrayList<User> array_list = new ArrayList<>();
+
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor res =  db.rawQuery( "select * from users", null );
         res.moveToFirst();
@@ -132,5 +132,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return array_list;
     }
 
+    public Vector<Statistics> getSteps(String username) {
+        Vector<Statistics> list = new Vector<>();
 
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor res =  db.rawQuery( "select * from daily_stats where username = '" + username +  "'", null );
+        res.moveToFirst();
+
+        while(res.isAfterLast() == false){
+            list.add(new Statistics(res.getString(res.getColumnIndex(DAILY_DATE)), res.getInt(res.getColumnIndex(DAILY_STEPS))));
+            res.moveToNext();
+        }
+        return list;
+    }
 }

@@ -27,9 +27,8 @@ public class SideViewContent {
     public static Map<String, Item> ITEM_MAP = new HashMap<String, Item>();
 
     static {
-        addItem(new Item("1", "Today's Walk"));
-        addItem(new Item("2", "Statistics"));
-        addItem(new Item("3", "Logout"));
+        addItem(new Item("1", "Statistics"));
+        addItem(new Item("2", "Logout"));
     }
 
     private static void addItem(Item item) {

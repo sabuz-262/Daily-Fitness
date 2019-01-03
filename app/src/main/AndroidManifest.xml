@@ -30,6 +30,9 @@
             android:name=".FragmentListActivity"
             android:label="@string/title_activity_register"></activity>
         <service android:name=".SensorBackgroundService" />
+        <receiver android:name=".ReminderBroadcastReceiver" >
+        </receiver>
     </application>
+
 
 </manifest>
